@@ -8,8 +8,16 @@ world-space mesh + material color into one glTF scene, recentered on the fly's
 bounding box. This lets the frontend load a plain GLB with no Python/MuJoCo
 runtime dependency.
 
+Also writes frontend/src/assets/fly-metadata.json with groundOffsetMm (how
+far the thorax origin needs to be lifted so the lowest point — normally a
+leg tarsus in the neutral pose — touches world Y=0) and extentMm, so the
+frontend can place multiple fly instances flush on a shared ground plane
+without hardcoding a magic offset.
+
 Run with: uv run python export_fly_mesh.py
 """
+
+import json
 
 import mujoco
 import numpy as np
@@ -17,7 +25,8 @@ import trimesh
 from flygym.anatomy import AxisOrder, JointPreset, Skeleton
 from flygym.compose import KinematicPosePreset, NeuroMechFly
 
-OUTPUT_PATH = "../frontend/public/models/fly.glb"
+GLB_OUTPUT_PATH = "../frontend/public/models/fly.glb"
+METADATA_OUTPUT_PATH = "../frontend/src/assets/fly-metadata.json"
 
 # MuJoCo/flygym uses a Z-up world (confirmed empirically: leg tarsi sit far
 # below the thorax/head in Z, head/abdomen are separated along X, left/right
@@ -56,6 +65,9 @@ def bake_scene(mj_model, mj_data):
     thorax_id = mujoco.mj_name2id(mj_model, mujoco.mjtObj.mjOBJ_GEOM, "c_thorax")
     thorax_center = (mj_data.geom_xpos[thorax_id] @ MUJOCO_TO_GLTF_UP.T)
 
+    min_y = np.inf
+    min_y_geom_name = None
+
     for geom_id in range(mj_model.ngeom):
         mesh_id = mj_model.geom_dataid[geom_id]
         if mesh_id < 0:
@@ -80,25 +92,36 @@ def bake_scene(mj_model, mj_data):
         geom_name = mj_model.geom(geom_id).name or f"geom_{geom_id}"
         scene.add_geometry(mesh, node_name=geom_name)
 
+        geom_min_y = verts_world[:, 1].min()
+        if geom_min_y < min_y:
+            min_y = geom_min_y
+            min_y_geom_name = geom_name
+
     # Center on the thorax (the fly's anatomical core), not the bounding-box
     # midpoint: the neutral pose's dangling legs pull the bbox center well
     # below the body, off-centering the model in the default view.
     scene.apply_translation(-thorax_center)
+    ground_offset_mm = float(-(min_y - thorax_center[1]))
 
-    return scene
+    return scene, ground_offset_mm, min_y_geom_name
 
 
 def main():
     mj_model, mj_data = build_model()
-    scene = bake_scene(mj_model, mj_data)
+    scene, ground_offset_mm, min_y_geom_name = bake_scene(mj_model, mj_data)
 
     bounds = scene.bounds
     size = bounds[1] - bounds[0]
     print(f"geoms baked: {len(scene.geometry)}")
     print(f"bounding box size (mm): {size}")
+    print(f"ground offset (mm): {ground_offset_mm} (lowest point on '{min_y_geom_name}')")
 
-    scene.export(OUTPUT_PATH)
-    print(f"wrote {OUTPUT_PATH}")
+    scene.export(GLB_OUTPUT_PATH)
+    print(f"wrote {GLB_OUTPUT_PATH}")
+
+    with open(METADATA_OUTPUT_PATH, "w") as f:
+        json.dump({"groundOffsetMm": ground_offset_mm, "extentMm": size.tolist()}, f, indent=2)
+    print(f"wrote {METADATA_OUTPUT_PATH}")
 
 
 if __name__ == "__main__":

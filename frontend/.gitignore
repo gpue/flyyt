@@ -12,6 +12,11 @@ dist
 dist-ssr
 *.local
 
+# Local overrides of VITE_FLY_* config; frontend/.env.example documents the defaults.
+.env
+.env.*
+!.env.example
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
