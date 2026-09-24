@@ -1,6 +1,6 @@
 import { useMemo } from "react";
-import flyMetadata from "./assets/fly-metadata.json";
 import { FLY_AREA_CONFIG } from "./env";
+import { EXTENT_MM, GROUND_OFFSET_MM } from "./rigMetadata";
 
 export interface FlyInstanceData {
   id: string;
@@ -8,8 +8,8 @@ export interface FlyInstanceData {
   position: [number, number, number];
 }
 
-export const FLY_GROUND_OFFSET_MM = flyMetadata.groundOffsetMm;
-export const FLY_EXTENT_MM = flyMetadata.extentMm as [number, number, number];
+export const FLY_GROUND_OFFSET_MM = GROUND_OFFSET_MM;
+export const FLY_EXTENT_MM = EXTENT_MM;
 
 function generateFlyLayout(
   config: typeof FLY_AREA_CONFIG,

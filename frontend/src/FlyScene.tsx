@@ -5,6 +5,7 @@ import CameraRig from "./CameraRig";
 import { FLY_AREA_CONFIG } from "./env";
 import FlyInstances from "./FlyInstances";
 import { FLY_EXTENT_MM, type FlyInstanceData } from "./useFlyLayout";
+import type { LiveFlyPositions } from "./useLiveFlyState";
 
 // Close-up "hero shot" offset when a specific fly is selected, derived from
 // one fly's own size so every instance gets the same framing regardless of
@@ -23,22 +24,35 @@ const OVERVIEW = {
 interface FlySceneProps {
   flies: FlyInstanceData[];
   selectedFlyId: string | null;
+  livePositionsRef: React.RefObject<LiveFlyPositions>;
+  joystickRef: React.RefObject<{ x: number; y: number }>;
 }
 
-export default function FlyScene({ flies, selectedFlyId }: FlySceneProps) {
+export default function FlyScene({
+  flies,
+  selectedFlyId,
+  livePositionsRef,
+  joystickRef,
+}: FlySceneProps) {
   const controlsRef = useRef<CameraControls | null>(null);
 
   return (
     <Canvas
       camera={{ position: OVERVIEW.position, fov: 40, near: 0.01, far: areaSize * 20 }}
+      gl={{ preserveDrawingBuffer: true }}
     >
-      <color attach="background" args={["#0b0c10"]} />
+      <color attach="background" args={["#6b7280"]} />
       <ambientLight intensity={0.6} />
       <directionalLight position={[5, 8, 4]} intensity={1.4} />
       <directionalLight position={[-6, 2, -4]} intensity={0.4} />
 
       <Suspense fallback={null}>
-        <FlyInstances flies={flies} />
+        <FlyInstances
+          flies={flies}
+          selectedFlyId={selectedFlyId}
+          joystickRef={joystickRef}
+          livePositionsRef={livePositionsRef}
+        />
       </Suspense>
 
       <Grid
@@ -56,6 +70,7 @@ export default function FlyScene({ flies, selectedFlyId }: FlySceneProps) {
         ref={controlsRef}
         makeDefault
         smoothTime={0.4}
+        dollySpeed={2.5}
         minDistance={flyCamDist * 0.3}
         maxDistance={areaSize * 5}
       />
@@ -65,6 +80,7 @@ export default function FlyScene({ flies, selectedFlyId }: FlySceneProps) {
         selectedFlyId={selectedFlyId}
         focusOffset={FOCUS_OFFSET}
         overview={OVERVIEW}
+        livePositionsRef={livePositionsRef}
       />
     </Canvas>
   );

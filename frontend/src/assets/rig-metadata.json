@@ -1,0 +1,403 @@
+{
+  "groundOffsetMm": 1.3187505274792797,
+  "extentMm": [
+    3.780889761794435,
+    1.8509634086731508,
+    3.4974607991130986
+  ],
+  "facingOffsetRad": 1.570803046371616,
+  "legs": {
+    "lf": [
+      "c_thorax-lf_coxa-yaw",
+      "c_thorax-lf_coxa-roll",
+      "c_thorax-lf_coxa-pitch",
+      "lf_coxa-lf_trochanterfemur-roll",
+      "lf_coxa-lf_trochanterfemur-pitch",
+      "lf_trochanterfemur-lf_tibia-pitch",
+      "lf_tibia-lf_tarsus1-pitch"
+    ],
+    "lm": [
+      "c_thorax-lm_coxa-yaw",
+      "c_thorax-lm_coxa-roll",
+      "c_thorax-lm_coxa-pitch",
+      "lm_coxa-lm_trochanterfemur-roll",
+      "lm_coxa-lm_trochanterfemur-pitch",
+      "lm_trochanterfemur-lm_tibia-pitch",
+      "lm_tibia-lm_tarsus1-pitch"
+    ],
+    "lh": [
+      "c_thorax-lh_coxa-yaw",
+      "c_thorax-lh_coxa-roll",
+      "c_thorax-lh_coxa-pitch",
+      "lh_coxa-lh_trochanterfemur-roll",
+      "lh_coxa-lh_trochanterfemur-pitch",
+      "lh_trochanterfemur-lh_tibia-pitch",
+      "lh_tibia-lh_tarsus1-pitch"
+    ],
+    "rf": [
+      "c_thorax-rf_coxa-yaw",
+      "c_thorax-rf_coxa-roll",
+      "c_thorax-rf_coxa-pitch",
+      "rf_coxa-rf_trochanterfemur-roll",
+      "rf_coxa-rf_trochanterfemur-pitch",
+      "rf_trochanterfemur-rf_tibia-pitch",
+      "rf_tibia-rf_tarsus1-pitch"
+    ],
+    "rm": [
+      "c_thorax-rm_coxa-yaw",
+      "c_thorax-rm_coxa-roll",
+      "c_thorax-rm_coxa-pitch",
+      "rm_coxa-rm_trochanterfemur-roll",
+      "rm_coxa-rm_trochanterfemur-pitch",
+      "rm_trochanterfemur-rm_tibia-pitch",
+      "rm_tibia-rm_tarsus1-pitch"
+    ],
+    "rh": [
+      "c_thorax-rh_coxa-yaw",
+      "c_thorax-rh_coxa-roll",
+      "c_thorax-rh_coxa-pitch",
+      "rh_coxa-rh_trochanterfemur-roll",
+      "rh_coxa-rh_trochanterfemur-pitch",
+      "rh_trochanterfemur-rh_tibia-pitch",
+      "rh_tibia-rh_tarsus1-pitch"
+    ]
+  },
+  "joints": {
+    "c_thorax-lf_coxa-yaw": {
+      "node": "lf_coxa",
+      "axis": [
+        0.0,
+        0.0,
+        1.0
+      ]
+    },
+    "c_thorax-lf_coxa-roll": {
+      "node": "lf_coxa",
+      "axis": [
+        0.0,
+        1.0,
+        0.0
+      ]
+    },
+    "c_thorax-lf_coxa-pitch": {
+      "node": "lf_coxa",
+      "axis": [
+        1.0,
+        0.0,
+        0.0
+      ]
+    },
+    "lf_coxa-lf_trochanterfemur-roll": {
+      "node": "lf_trochanterfemur",
+      "axis": [
+        0.0,
+        1.0,
+        0.0
+      ]
+    },
+    "lf_coxa-lf_trochanterfemur-pitch": {
+      "node": "lf_trochanterfemur",
+      "axis": [
+        1.0,
+        0.0,
+        0.0
+      ]
+    },
+    "lf_trochanterfemur-lf_tibia-pitch": {
+      "node": "lf_tibia",
+      "axis": [
+        1.0,
+        0.0,
+        0.0
+      ]
+    },
+    "lf_tibia-lf_tarsus1-pitch": {
+      "node": "lf_tarsus1",
+      "axis": [
+        1.0,
+        0.0,
+        0.0
+      ]
+    },
+    "c_thorax-lm_coxa-yaw": {
+      "node": "lm_coxa",
+      "axis": [
+        0.0,
+        0.0,
+        1.0
+      ]
+    },
+    "c_thorax-lm_coxa-roll": {
+      "node": "lm_coxa",
+      "axis": [
+        0.0,
+        1.0,
+        0.0
+      ]
+    },
+    "c_thorax-lm_coxa-pitch": {
+      "node": "lm_coxa",
+      "axis": [
+        1.0,
+        0.0,
+        0.0
+      ]
+    },
+    "lm_coxa-lm_trochanterfemur-roll": {
+      "node": "lm_trochanterfemur",
+      "axis": [
+        0.0,
+        1.0,
+        0.0
+      ]
+    },
+    "lm_coxa-lm_trochanterfemur-pitch": {
+      "node": "lm_trochanterfemur",
+      "axis": [
+        1.0,
+        0.0,
+        0.0
+      ]
+    },
+    "lm_trochanterfemur-lm_tibia-pitch": {
+      "node": "lm_tibia",
+      "axis": [
+        1.0,
+        0.0,
+        0.0
+      ]
+    },
+    "lm_tibia-lm_tarsus1-pitch": {
+      "node": "lm_tarsus1",
+      "axis": [
+        1.0,
+        0.0,
+        0.0
+      ]
+    },
+    "c_thorax-lh_coxa-yaw": {
+      "node": "lh_coxa",
+      "axis": [
+        0.0,
+        0.0,
+        1.0
+      ]
+    },
+    "c_thorax-lh_coxa-roll": {
+      "node": "lh_coxa",
+      "axis": [
+        0.0,
+        1.0,
+        0.0
+      ]
+    },
+    "c_thorax-lh_coxa-pitch": {
+      "node": "lh_coxa",
+      "axis": [
+        1.0,
+        0.0,
+        0.0
+      ]
+    },
+    "lh_coxa-lh_trochanterfemur-roll": {
+      "node": "lh_trochanterfemur",
+      "axis": [
+        0.0,
+        1.0,
+        0.0
+      ]
+    },
+    "lh_coxa-lh_trochanterfemur-pitch": {
+      "node": "lh_trochanterfemur",
+      "axis": [
+        1.0,
+        0.0,
+        0.0
+      ]
+    },
+    "lh_trochanterfemur-lh_tibia-pitch": {
+      "node": "lh_tibia",
+      "axis": [
+        1.0,
+        0.0,
+        0.0
+      ]
+    },
+    "lh_tibia-lh_tarsus1-pitch": {
+      "node": "lh_tarsus1",
+      "axis": [
+        1.0,
+        0.0,
+        0.0
+      ]
+    },
+    "c_thorax-rf_coxa-yaw": {
+      "node": "rf_coxa",
+      "axis": [
+        0.0,
+        0.0,
+        1.0
+      ]
+    },
+    "c_thorax-rf_coxa-roll": {
+      "node": "rf_coxa",
+      "axis": [
+        0.0,
+        1.0,
+        0.0
+      ]
+    },
+    "c_thorax-rf_coxa-pitch": {
+      "node": "rf_coxa",
+      "axis": [
+        1.0,
+        0.0,
+        0.0
+      ]
+    },
+    "rf_coxa-rf_trochanterfemur-roll": {
+      "node": "rf_trochanterfemur",
+      "axis": [
+        0.0,
+        1.0,
+        0.0
+      ]
+    },
+    "rf_coxa-rf_trochanterfemur-pitch": {
+      "node": "rf_trochanterfemur",
+      "axis": [
+        1.0,
+        0.0,
+        0.0
+      ]
+    },
+    "rf_trochanterfemur-rf_tibia-pitch": {
+      "node": "rf_tibia",
+      "axis": [
+        1.0,
+        0.0,
+        0.0
+      ]
+    },
+    "rf_tibia-rf_tarsus1-pitch": {
+      "node": "rf_tarsus1",
+      "axis": [
+        1.0,
+        0.0,
+        0.0
+      ]
+    },
+    "c_thorax-rm_coxa-yaw": {
+      "node": "rm_coxa",
+      "axis": [
+        0.0,
+        0.0,
+        1.0
+      ]
+    },
+    "c_thorax-rm_coxa-roll": {
+      "node": "rm_coxa",
+      "axis": [
+        0.0,
+        1.0,
+        0.0
+      ]
+    },
+    "c_thorax-rm_coxa-pitch": {
+      "node": "rm_coxa",
+      "axis": [
+        1.0,
+        0.0,
+        0.0
+      ]
+    },
+    "rm_coxa-rm_trochanterfemur-roll": {
+      "node": "rm_trochanterfemur",
+      "axis": [
+        0.0,
+        1.0,
+        0.0
+      ]
+    },
+    "rm_coxa-rm_trochanterfemur-pitch": {
+      "node": "rm_trochanterfemur",
+      "axis": [
+        1.0,
+        0.0,
+        0.0
+      ]
+    },
+    "rm_trochanterfemur-rm_tibia-pitch": {
+      "node": "rm_tibia",
+      "axis": [
+        1.0,
+        0.0,
+        0.0
+      ]
+    },
+    "rm_tibia-rm_tarsus1-pitch": {
+      "node": "rm_tarsus1",
+      "axis": [
+        1.0,
+        0.0,
+        0.0
+      ]
+    },
+    "c_thorax-rh_coxa-yaw": {
+      "node": "rh_coxa",
+      "axis": [
+        0.0,
+        0.0,
+        1.0
+      ]
+    },
+    "c_thorax-rh_coxa-roll": {
+      "node": "rh_coxa",
+      "axis": [
+        0.0,
+        1.0,
+        0.0
+      ]
+    },
+    "c_thorax-rh_coxa-pitch": {
+      "node": "rh_coxa",
+      "axis": [
+        1.0,
+        0.0,
+        0.0
+      ]
+    },
+    "rh_coxa-rh_trochanterfemur-roll": {
+      "node": "rh_trochanterfemur",
+      "axis": [
+        0.0,
+        1.0,
+        0.0
+      ]
+    },
+    "rh_coxa-rh_trochanterfemur-pitch": {
+      "node": "rh_trochanterfemur",
+      "axis": [
+        1.0,
+        0.0,
+        0.0
+      ]
+    },
+    "rh_trochanterfemur-rh_tibia-pitch": {
+      "node": "rh_tibia",
+      "axis": [
+        1.0,
+        0.0,
+        0.0
+      ]
+    },
+    "rh_tibia-rh_tarsus1-pitch": {
+      "node": "rh_tarsus1",
+      "axis": [
+        1.0,
+        0.0,
+        0.0
+      ]
+    }
+  }
+}

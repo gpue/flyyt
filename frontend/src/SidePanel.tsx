@@ -1,7 +1,11 @@
+import BrainActivity from "./BrainActivity";
+import Joystick from "./Joystick";
 import type { FlyInstanceData } from "./useFlyLayout";
+import type { LiveFlyPositions } from "./useLiveFlyState";
 
 const EXPANDED_WIDTH = 280;
 const COLLAPSED_WIDTH = 36;
+const FLY_ICON = "\u{1FAB0}"; // 🪰, same icon used for the favicon
 
 interface SidePanelProps {
   flies: FlyInstanceData[];
@@ -9,6 +13,8 @@ interface SidePanelProps {
   onSelectFly: (id: string | null) => void;
   collapsed: boolean;
   onToggleCollapsed: () => void;
+  joystickRef: React.RefObject<{ x: number; y: number }>;
+  livePositionsRef: React.RefObject<LiveFlyPositions>;
 }
 
 export default function SidePanel({
@@ -17,6 +23,8 @@ export default function SidePanel({
   onSelectFly,
   collapsed,
   onToggleCollapsed,
+  joystickRef,
+  livePositionsRef,
 }: SidePanelProps) {
   return (
     <div
@@ -52,8 +60,10 @@ export default function SidePanel({
         {collapsed ? "‹" : "›"}
       </button>
 
+      {!collapsed && <Joystick vectorRef={joystickRef} disabled={!selectedFlyId} />}
+
       {!collapsed && (
-        <div style={{ overflowY: "auto", padding: "8px 0" }} role="list">
+        <div style={{ flex: 1, minHeight: 0, overflowY: "auto", padding: "8px 0" }} role="list">
           {flies.map((fly) => {
             const isSelected = fly.id === selectedFlyId;
             return (
@@ -76,12 +86,17 @@ export default function SidePanel({
                   fontSize: 14,
                 }}
               >
+                <span aria-hidden="true" style={{ marginRight: 8 }}>
+                  {FLY_ICON}
+                </span>
                 Fly {fly.index + 1}
               </button>
             );
           })}
         </div>
       )}
+
+      {!collapsed && <BrainActivity selectedFlyId={selectedFlyId} livePositionsRef={livePositionsRef} />}
     </div>
   );
 }
