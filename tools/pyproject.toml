@@ -1,0 +1,10 @@
+[project]
+name = "flyyt-tools"
+version = "0.1.0"
+description = "One-off asset bake scripts (e.g. NeuroMechFly -> GLB) for the flyyt frontend"
+requires-python = ">=3.12,<3.15"
+dependencies = [
+    "flygym>=2.1.0",
+    "numpy>=2.5.3",
+    "trimesh>=5.1.0",
+]
