@@ -19,7 +19,9 @@
  * here is a REAL FlyWire neuron at its REAL anatomical position (see
  * NEURON_POSITIONS below) — but the *connectivity* between them
  * (BrainState.weights) is still a random fixed matrix, not real connectome
- * synapses (which aren't loaded here).
+ * synapses (which aren't loaded here). The motor group's activity isn't
+ * only visualized: motorOutput() below feeds wingController.ts, so each
+ * DNp01 neuron's firing actually drives its own wing's flap.
  */
 
 import brainPositions from "./assets/brain-positions.json";
@@ -39,6 +41,23 @@ export function neuronGroup(index: number): NeuronGroup {
   if (index < SENSORY_COUNT) return "sensory";
   if (index < SENSORY_COUNT + HIDDEN_COUNT) return "hidden";
   return "motor";
+}
+
+// Which of the 2 motor-group slots is the real left/right DNp01 (baked
+// alongside their positions by tools/export_brain_positions.py from
+// FlyWire's own "side" column), found once rather than per frame.
+const MOTOR_SIDE_INDEX: Record<"left" | "right", number> = (() => {
+  const motorStart = SENSORY_COUNT + HIDDEN_COUNT;
+  const index = { left: -1, right: -1 };
+  brainPositions.motorSides.forEach((side, i) => {
+    if (side === "left" || side === "right") index[side] = motorStart + i;
+  });
+  return index;
+})();
+
+/** Current activity (0-1, decaying) of the real left/right DNp01 neuron — consumed by wingController.ts. */
+export function motorOutput(state: BrainState, side: "left" | "right"): number {
+  return state.brightness[MOTOR_SIDE_INDEX[side]];
 }
 
 const TAU_S = 0.02; // membrane time constant

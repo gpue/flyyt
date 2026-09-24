@@ -2,6 +2,7 @@ import { useRef } from "react";
 import { createBrain, type BrainState } from "./flyBrain";
 import { createGaitState, type GaitState } from "./tripodGait";
 import type { FlyInstanceData } from "./useFlyLayout";
+import { createWingControllerState, type WingControllerState } from "./wingController";
 
 export interface LiveFlyState {
   x: number;
@@ -10,6 +11,7 @@ export interface LiveFlyState {
   heading: number;
   gait: GaitState;
   brain: BrainState;
+  wingController: WingControllerState;
 }
 
 export type LiveFlyPositions = Map<string, LiveFlyState>;
@@ -26,6 +28,7 @@ export function useLiveFlyState(flies: FlyInstanceData[]) {
           heading: fly.heading,
           gait: createGaitState(),
           brain: createBrain(),
+          wingController: createWingControllerState(),
         },
       ]),
     ),

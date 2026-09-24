@@ -93,12 +93,20 @@ def main():
     print(f"total neurons: {total}")
     print(f"bounding box after normalization: {normalized.min(axis=0)} .. {normalized.max(axis=0)}")
 
+    motor_sides = [r["side"] for r in motor_rows]
+    print(f"motor sides: {motor_sides}")
+
     with open(OUTPUT_PATH, "w") as f:
         json.dump(
             {
                 "sensoryCount": len(sensory_rows),
                 "hiddenCount": len(hidden_rows),
                 "motorCount": len(motor_rows),
+                # Real FlyWire "side" per motor neuron ("left"/"right"), same
+                # order as motor_rows (i.e. the tail of `positions`) -- lets
+                # the frontend drive each wing from its own real DNp01 rather
+                # than one averaged signal for both.
+                "motorSides": motor_sides,
                 "positions": normalized.flatten().round(4).tolist(),
             },
             f,

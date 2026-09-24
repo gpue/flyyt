@@ -3,11 +3,12 @@ import { useFrame } from "@react-three/fiber";
 import { useRef } from "react";
 import { Quaternion, Vector3, type Group, type Object3D } from "three";
 import { FLY_AREA_CONFIG } from "./env";
-import { stepBrain } from "./flyBrain";
+import { motorOutput, stepBrain } from "./flyBrain";
 import { FACING_OFFSET_RAD, JOINTS, LEGS, WINGS, wingJointName, type LegName, type WingSide } from "./rigMetadata";
 import { stepGait } from "./tripodGait";
 import type { FlyInstanceData } from "./useFlyLayout";
 import type { LiveFlyPositions } from "./useLiveFlyState";
+import { stepWingController } from "./wingController";
 
 const MAX_FORWARD_SPEED_MM_S = 18;
 const MAX_TURN_RATE_RAD_S = 2.5;
@@ -140,9 +141,17 @@ export default function FlyInstances({
     // ([1,0,0] for both, per rig-metadata.json) doesn't point to opposite
     // world directions on the two sides. Verified live: +delta on the left
     // rotated it down/under the body (visibly wrong), while -delta on
-    // either side raises that wing cleanly.
-    live.gait.jointAngles[wingJointName("l", "roll")] = -wings.left * MAX_WING_LIFT_RAD;
-    live.gait.jointAngles[wingJointName("r", "roll")] = -wings.right * MAX_WING_LIFT_RAD;
+    // either side raises that wing cleanly. The slider is a static bias
+    // (manual posing); the brain's motor output (each side's own real
+    // DNp01) adds a flapping oscillation on top via wingController.ts.
+    const flap = stepWingController(
+      live.wingController,
+      motorOutput(live.brain, "left"),
+      motorOutput(live.brain, "right"),
+      dt,
+    );
+    live.gait.jointAngles[wingJointName("l", "roll")] = -wings.left * MAX_WING_LIFT_RAD + flap.left;
+    live.gait.jointAngles[wingJointName("r", "roll")] = -wings.right * MAX_WING_LIFT_RAD + flap.right;
 
     const rig = getRig(selectedFlyId, group);
     for (const { node, joints } of NODE_GROUPS) {
