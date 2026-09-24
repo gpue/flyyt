@@ -4,13 +4,18 @@ import { useRef } from "react";
 import { Quaternion, Vector3, type Group, type Object3D } from "three";
 import { FLY_AREA_CONFIG } from "./env";
 import { stepBrain } from "./flyBrain";
-import { FACING_OFFSET_RAD, JOINTS, LEGS, type LegName } from "./rigMetadata";
+import { FACING_OFFSET_RAD, JOINTS, LEGS, WINGS, wingJointName, type LegName, type WingSide } from "./rigMetadata";
 import { stepGait } from "./tripodGait";
 import type { FlyInstanceData } from "./useFlyLayout";
 import type { LiveFlyPositions } from "./useLiveFlyState";
 
 const MAX_FORWARD_SPEED_MM_S = 18;
 const MAX_TURN_RATE_RAD_S = 2.5;
+// Delta from the rig's neutral bind pose, not an absolute MuJoCo joint
+// angle (see the composition loop below) -- empirically verified via a
+// live test to raise a wing to roughly its full biomechanical deviation
+// range without distorting the mesh.
+const MAX_WING_LIFT_RAD = 1.4;
 
 const HALF_WIDTH = FLY_AREA_CONFIG.widthMm / 2;
 const HALF_DEPTH = FLY_AREA_CONFIG.depthMm / 2;
@@ -30,16 +35,23 @@ interface NodeGroup {
 
 function buildNodeGroups(): NodeGroup[] {
   const groups = new Map<string, NodeGroup>();
-  for (const leg of Object.keys(LEGS) as LegName[]) {
-    for (const jointName of LEGS[leg]) {
-      const info = JOINTS[jointName];
-      let group = groups.get(info.node);
-      if (!group) {
-        group = { node: info.node, joints: [] };
-        groups.set(info.node, group);
-      }
-      group.joints.push({ name: jointName, axis: new Vector3(...info.axis) });
+  const addJoint = (jointName: string) => {
+    const info = JOINTS[jointName];
+    let group = groups.get(info.node);
+    if (!group) {
+      group = { node: info.node, joints: [] };
+      groups.set(info.node, group);
     }
+    group.joints.push({ name: jointName, axis: new Vector3(...info.axis) });
+  };
+
+  for (const leg of Object.keys(LEGS) as LegName[]) {
+    for (const jointName of LEGS[leg]) addJoint(jointName);
+  }
+  // Wing hinges (currently: roll/deviation axis only, driven by the side
+  // panel's wing sliders) are composed the same way leg joints are.
+  for (const side of Object.keys(WINGS) as WingSide[]) {
+    for (const jointName of WINGS[side]) addJoint(jointName);
   }
   return Array.from(groups.values());
 }
@@ -55,6 +67,7 @@ interface FlyInstancesProps {
   flies: FlyInstanceData[];
   selectedFlyId: string | null;
   joystickRef: React.RefObject<{ x: number; y: number }>;
+  wingSlidersRef: React.RefObject<{ left: number; right: number }>;
   livePositionsRef: React.RefObject<LiveFlyPositions>;
 }
 
@@ -62,6 +75,7 @@ export default function FlyInstances({
   flies,
   selectedFlyId,
   joystickRef,
+  wingSlidersRef,
   livePositionsRef,
 }: FlyInstancesProps) {
   const { scene } = useGLTF("/models/fly.glb");
@@ -109,9 +123,26 @@ export default function FlyInstances({
     const sensoryDrive = Math.min(1, Math.hypot(joystick.x, joystick.y));
     stepBrain(live.brain, sensoryDrive, dt);
 
-    if (command.forwardSpeed === 0 && command.turnRate === 0) return;
+    // Only the leg gait is gated on an active walk command -- the joint
+    // composition below must run every frame regardless, or any joint left
+    // non-zero (a mid-stride leg, a raised wing slider) freezes there
+    // forever the instant the fly stops walking, since nothing else ever
+    // re-applies jointAngles back onto the rig. This is what made the wing
+    // hinge appear stuck in a "strange position" after a slider/test drive:
+    // the composition loop simply stopped running once movement stopped.
+    const isWalking = command.forwardSpeed !== 0 || command.turnRate !== 0;
+    if (isWalking) stepGait(live.gait, command, dt);
 
-    stepGait(live.gait, command, dt);
+    const wings = wingSlidersRef.current;
+    // Both negative, NOT mirrored: despite l_wing/r_wing being placed
+    // symmetrically, their body_quat orientations in the compiled MuJoCo
+    // model aren't mirror images of each other, so the same local roll axis
+    // ([1,0,0] for both, per rig-metadata.json) doesn't point to opposite
+    // world directions on the two sides. Verified live: +delta on the left
+    // rotated it down/under the body (visibly wrong), while -delta on
+    // either side raises that wing cleanly.
+    live.gait.jointAngles[wingJointName("l", "roll")] = -wings.left * MAX_WING_LIFT_RAD;
+    live.gait.jointAngles[wingJointName("r", "roll")] = -wings.right * MAX_WING_LIFT_RAD;
 
     const rig = getRig(selectedFlyId, group);
     for (const { node, joints } of NODE_GROUPS) {
@@ -126,6 +157,8 @@ export default function FlyInstances({
       }
       rigNode.object.quaternion.copy(composed);
     }
+
+    if (!isWalking) return;
 
     live.heading += command.turnRate * dt;
     live.x = clamp(live.x + Math.sin(live.heading) * command.forwardSpeed * dt, -HALF_WIDTH, HALF_WIDTH);
@@ -149,6 +182,10 @@ export default function FlyInstances({
           }}
           object={scene}
           position={fly.position}
+          // Matches the per-frame `live.heading - FACING_OFFSET_RAD` used
+          // while walking, so a fly's rendered facing direction is already
+          // correct on first paint instead of only updating once it moves.
+          rotation={[0, fly.heading - FACING_OFFSET_RAD, 0]}
         />
       ))}
     </>

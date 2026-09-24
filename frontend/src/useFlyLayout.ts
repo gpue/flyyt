@@ -6,6 +6,8 @@ export interface FlyInstanceData {
   id: string;
   index: number;
   position: [number, number, number];
+  /** atan2(x, z) convention, matching the frontend's heading math. */
+  heading: number;
 }
 
 export const FLY_GROUND_OFFSET_MM = GROUND_OFFSET_MM;
@@ -23,6 +25,7 @@ function generateFlyLayout(
       groundOffsetMm + Math.random() * config.heightMm,
       (Math.random() - 0.5) * config.depthMm,
     ],
+    heading: Math.random() * Math.PI * 2,
   }));
 }
 

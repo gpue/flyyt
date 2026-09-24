@@ -23,7 +23,7 @@ export function useLiveFlyState(flies: FlyInstanceData[]) {
           x: fly.position[0],
           y: fly.position[1],
           z: fly.position[2],
-          heading: 0,
+          heading: fly.heading,
           gait: createGaitState(),
           brain: createBrain(),
         },

@@ -62,6 +62,18 @@
       "rh_tibia-rh_tarsus1-pitch"
     ]
   },
+  "wings": {
+    "l": [
+      "c_thorax-l_wing-yaw",
+      "c_thorax-l_wing-roll",
+      "c_thorax-l_wing-pitch"
+    ],
+    "r": [
+      "c_thorax-r_wing-yaw",
+      "c_thorax-r_wing-roll",
+      "c_thorax-r_wing-pitch"
+    ]
+  },
   "joints": {
     "c_thorax-lf_coxa-yaw": {
       "node": "lf_coxa",
@@ -397,6 +409,78 @@
         1.0,
         0.0,
         0.0
+      ]
+    },
+    "c_thorax-l_wing-yaw": {
+      "node": "l_wing",
+      "axis": [
+        0.0,
+        0.0,
+        1.0
+      ],
+      "range": [
+        -1.5,
+        1.5
+      ]
+    },
+    "c_thorax-l_wing-roll": {
+      "node": "l_wing",
+      "axis": [
+        1.0,
+        0.0,
+        0.0
+      ],
+      "range": [
+        -1.0,
+        1.5
+      ]
+    },
+    "c_thorax-l_wing-pitch": {
+      "node": "l_wing",
+      "axis": [
+        0.0,
+        1.0,
+        0.0
+      ],
+      "range": [
+        -1.27,
+        2.92
+      ]
+    },
+    "c_thorax-r_wing-yaw": {
+      "node": "r_wing",
+      "axis": [
+        0.0,
+        0.0,
+        1.0
+      ],
+      "range": [
+        -1.5,
+        1.5
+      ]
+    },
+    "c_thorax-r_wing-roll": {
+      "node": "r_wing",
+      "axis": [
+        1.0,
+        0.0,
+        0.0
+      ],
+      "range": [
+        -1.0,
+        1.5
+      ]
+    },
+    "c_thorax-r_wing-pitch": {
+      "node": "r_wing",
+      "axis": [
+        0.0,
+        1.0,
+        0.0
+      ],
+      "range": [
+        -1.27,
+        2.92
       ]
     }
   }

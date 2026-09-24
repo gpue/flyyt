@@ -8,6 +8,7 @@ export default function App() {
   const flies = useFlyLayout();
   const livePositionsRef = useLiveFlyState(flies);
   const joystickRef = useRef({ x: 0, y: 0 });
+  const wingSlidersRef = useRef({ left: 0, right: 0 });
   const [selectedFlyId, setSelectedFlyId] = useState<string | null>(null);
   const [panelCollapsed, setPanelCollapsed] = useState(false);
 
@@ -19,6 +20,7 @@ export default function App() {
           selectedFlyId={selectedFlyId}
           livePositionsRef={livePositionsRef}
           joystickRef={joystickRef}
+          wingSlidersRef={wingSlidersRef}
         />
       </div>
       <SidePanel
@@ -28,6 +30,7 @@ export default function App() {
         collapsed={panelCollapsed}
         onToggleCollapsed={() => setPanelCollapsed((c) => !c)}
         joystickRef={joystickRef}
+        wingSlidersRef={wingSlidersRef}
         livePositionsRef={livePositionsRef}
       />
     </div>

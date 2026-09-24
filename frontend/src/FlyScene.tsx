@@ -7,11 +7,14 @@ import FlyInstances from "./FlyInstances";
 import { FLY_EXTENT_MM, type FlyInstanceData } from "./useFlyLayout";
 import type { LiveFlyPositions } from "./useLiveFlyState";
 
-// Close-up "hero shot" offset when a specific fly is selected, derived from
-// one fly's own size so every instance gets the same framing regardless of
-// where in the ground area it sits.
+// Close-up "hero shot" distance/height when a specific fly is selected,
+// derived from one fly's own size so every instance gets the same framing
+// regardless of where in the ground area it sits. Magnitudes match the
+// previous fixed diagonal offset's horizontal/vertical components, now
+// applied relative to each fly's own current heading (see CameraRig).
 const flyCamDist = Math.max(...FLY_EXTENT_MM) * 2.4;
-const FOCUS_OFFSET: [number, number, number] = [flyCamDist * 0.7, flyCamDist * 0.35, flyCamDist * 0.9];
+const FOCUS_BACK_MM = flyCamDist * Math.hypot(0.7, 0.9);
+const FOCUS_UP_MM = flyCamDist * 0.35;
 
 // Overview shot sized to the configured ground area, not a single fly.
 const areaSize = Math.max(FLY_AREA_CONFIG.widthMm, FLY_AREA_CONFIG.depthMm);
@@ -26,6 +29,7 @@ interface FlySceneProps {
   selectedFlyId: string | null;
   livePositionsRef: React.RefObject<LiveFlyPositions>;
   joystickRef: React.RefObject<{ x: number; y: number }>;
+  wingSlidersRef: React.RefObject<{ left: number; right: number }>;
 }
 
 export default function FlyScene({
@@ -33,6 +37,7 @@ export default function FlyScene({
   selectedFlyId,
   livePositionsRef,
   joystickRef,
+  wingSlidersRef,
 }: FlySceneProps) {
   const controlsRef = useRef<CameraControls | null>(null);
 
@@ -51,6 +56,7 @@ export default function FlyScene({
           flies={flies}
           selectedFlyId={selectedFlyId}
           joystickRef={joystickRef}
+          wingSlidersRef={wingSlidersRef}
           livePositionsRef={livePositionsRef}
         />
       </Suspense>
@@ -76,9 +82,9 @@ export default function FlyScene({
       />
       <CameraRig
         controlsRef={controlsRef}
-        flies={flies}
         selectedFlyId={selectedFlyId}
-        focusOffset={FOCUS_OFFSET}
+        focusBackMm={FOCUS_BACK_MM}
+        focusUpMm={FOCUS_UP_MM}
         overview={OVERVIEW}
         livePositionsRef={livePositionsRef}
       />

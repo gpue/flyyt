@@ -2,14 +2,14 @@ import type { CameraControls } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
 import { useEffect, useRef, type RefObject } from "react";
 import { Vector3 } from "three";
-import type { FlyInstanceData } from "./useFlyLayout";
 import type { LiveFlyPositions } from "./useLiveFlyState";
 
 interface CameraRigProps {
   controlsRef: RefObject<CameraControls | null>;
-  flies: FlyInstanceData[];
   selectedFlyId: string | null;
-  focusOffset: [number, number, number];
+  /** Third-person chase distance/height behind the fly's current heading. */
+  focusBackMm: number;
+  focusUpMm: number;
   overview: { position: [number, number, number]; target: [number, number, number] };
   livePositionsRef: RefObject<LiveFlyPositions>;
 }
@@ -23,9 +23,9 @@ interface FollowState {
 
 export default function CameraRig({
   controlsRef,
-  flies,
   selectedFlyId,
-  focusOffset,
+  focusBackMm,
+  focusUpMm,
   overview,
   livePositionsRef,
 }: CameraRigProps) {
@@ -37,19 +37,34 @@ export default function CameraRig({
     const controls = controlsRef.current;
     if (!controls) return;
 
-    const fly = flies.find((f) => f.id === selectedFlyId);
-    if (!fly) {
+    const live = selectedFlyId ? livePositionsRef.current.get(selectedFlyId) : undefined;
+    if (!live) {
       const [px, py, pz] = overview.position;
       const [tx, ty, tz] = overview.target;
       controls.setLookAt(px, py, pz, tx, ty, tz, true);
       return;
     }
 
-    const [tx, ty, tz] = fly.position;
-    const [ox, oy, oz] = focusOffset;
-    controls.setLookAt(tx + ox, ty + oy, tz + oz, tx, ty, tz, true);
-    // controlsRef/flies/focusOffset/overview are stable across the session;
-    // only a change in selection should trigger a new camera transition.
+    // Third-person, behind-the-fly framing: place the camera opposite the
+    // fly's CURRENT facing direction (sin(heading), 0, cos(heading), same
+    // convention as the movement math), not a fixed world-space diagonal --
+    // a constant offset looked fine when every fly spawned facing the same
+    // way, but once headings are randomized (or a fly has turned since
+    // spawning) it just as often put the camera beside or in front of it.
+    const behindX = -Math.sin(live.heading) * focusBackMm;
+    const behindZ = -Math.cos(live.heading) * focusBackMm;
+    controls.setLookAt(
+      live.x + behindX,
+      live.y + focusUpMm,
+      live.z + behindZ,
+      live.x,
+      live.y,
+      live.z,
+      true,
+    );
+    // controlsRef/focusBackMm/focusUpMm/overview/livePositionsRef are stable
+    // across the session; only a change in selection should trigger a new
+    // camera transition.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedFlyId]);
 

@@ -2,9 +2,13 @@ import raw from "./assets/rig-metadata.json";
 
 export type LegName = "lf" | "lm" | "lh" | "rf" | "rm" | "rh";
 
+export type WingSide = "l" | "r";
+
 export interface JointInfo {
   node: string;
   axis: [number, number, number];
+  /** Biomechanical range in radians (wing-hinge joints only). */
+  range?: [number, number];
 }
 
 export const GROUND_OFFSET_MM: number = raw.groundOffsetMm;
@@ -15,6 +19,11 @@ export const EXTENT_MM: [number, number, number] = raw.extentMm as [number, numb
 // travel, or it visually appears to strafe instead of walking forward.
 export const FACING_OFFSET_RAD: number = raw.facingOffsetRad;
 export const LEGS: Record<LegName, string[]> = raw.legs;
+// Each wing is one MuJoCo body (child of c_thorax) with 3 hinge DOFs: yaw =
+// stroke angle (forward/back sweep), roll = deviation angle (up/down),
+// pitch = rotation angle (blade twist) -- the real biomechanical wing-hinge
+// axes from the flybody model, not a simplified single-axis flap.
+export const WINGS: Record<WingSide, string[]> = raw.wings;
 export const JOINTS: Record<string, JointInfo> = raw.joints as unknown as Record<string, JointInfo>;
 
 const LEG_LEVEL_NODES: Record<"ThC" | "CTr" | "FTi" | "TiTa", (leg: LegName) => [string, string]> = {
@@ -38,4 +47,8 @@ export function legJointName(
 ): string {
   const [parent, child] = LEG_LEVEL_NODES[level](leg);
   return `${parent}-${child}-${axis}`;
+}
+
+export function wingJointName(side: WingSide, axis: "yaw" | "roll" | "pitch"): string {
+  return `c_thorax-${side}_wing-${axis}`;
 }

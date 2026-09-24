@@ -33,10 +33,14 @@ Also writes frontend/src/assets/rig-metadata.json with:
 - legs: the 6 leg names ("lf","lm","lh","rf","rm","rh") each mapped to its
   7 actuated joint names, in FlyGym's own order
   (FlyBodyActuatedDOFPreset.LEGS_ACTIVE_ONLY).
-- joints: per actuated joint, which glTF node it rotates and its rotation
-  axis (in that node's own bind-local frame -- safe to use directly, since
-  only the root node gets the MuJoCo->glTF up-axis correction; every other
-  node's local frame is untouched MuJoCo-native).
+- wings: "l"/"r" each mapped to its 3 wing-hinge joint names (yaw/roll/pitch
+  -- stroke, deviation, and rotation angle of the real biomechanical hinge,
+  from FlyBodyActuatedDOFPreset.ALL since wings aren't in LEGS_ACTIVE_ONLY).
+- joints: per actuated joint, which glTF node it rotates, its rotation axis
+  (in that node's own bind-local frame -- safe to use directly, since only
+  the root node gets the MuJoCo->glTF up-axis correction; every other
+  node's local frame is untouched MuJoCo-native), and (wing joints only)
+  its biomechanical range in radians.
 
 Run with: uv run python export_fly_mesh.py
 """
@@ -85,6 +89,7 @@ MIN_FACES_BEFORE_DECIMATION = 1500  # meshes at or below this are left untouched
 MUJOCO_TO_GLTF_UP = np.array([[1, 0, 0], [0, 0, 1], [0, -1, 0]], dtype=float)
 
 LEG_PREFIXES = ["lf", "lm", "lh", "rf", "rm", "rh"]
+WING_BODIES = ["l_wing", "r_wing"]
 
 
 def build_model():
@@ -292,6 +297,30 @@ def main():
         }
 
     print(f"legs: { {k: len(v) for k, v in legs.items()} }")
+
+    # The wing hinges (3 DOF each: yaw/roll/pitch -- stroke, deviation, and
+    # rotation angle in the real biomechanical model) aren't in
+    # LEGS_ACTIVE_ONLY, so pull them separately from the ALL preset. Each
+    # wing is a single MuJoCo body (child of c_thorax) with all 3 joints
+    # rotating that same node, same composition pattern as the leg joints.
+    all_dofs = skeleton.get_actuated_dofs_from_preset(FlyBodyActuatedDOFPreset.ALL)
+    wings = {"l": [], "r": []}
+    for jdof in all_dofs:
+        child_name = jdof.child.name
+        if child_name not in WING_BODIES:
+            continue
+        side = child_name[0]  # "l_wing" / "r_wing" -> "l" / "r"
+        joint_name = f"{jdof.parent.name}-{jdof.child.name}-{jdof.axis.value}"
+        wings[side].append(joint_name)
+
+        jid = mujoco.mj_name2id(mj_model, mujoco.mjtObj.mjOBJ_JOINT, joint_name)
+        joints[joint_name] = {
+            "node": child_name,
+            "axis": mj_model.jnt_axis[jid].tolist(),
+            "range": mj_model.jnt_range[jid].tolist(),
+        }
+
+    print(f"wings: { {k: len(v) for k, v in wings.items()} }")
     print(f"actuated joints: {len(joints)}")
 
     metadata = {
@@ -299,6 +328,7 @@ def main():
         "extentMm": extent_mm,
         "facingOffsetRad": facing_offset_rad,
         "legs": legs,
+        "wings": wings,
         "joints": joints,
     }
     with open(METADATA_OUTPUT_PATH, "w") as f:

@@ -2,6 +2,7 @@ import BrainActivity from "./BrainActivity";
 import Joystick from "./Joystick";
 import type { FlyInstanceData } from "./useFlyLayout";
 import type { LiveFlyPositions } from "./useLiveFlyState";
+import WingSlider from "./WingSlider";
 
 const EXPANDED_WIDTH = 280;
 const COLLAPSED_WIDTH = 36;
@@ -14,6 +15,7 @@ interface SidePanelProps {
   collapsed: boolean;
   onToggleCollapsed: () => void;
   joystickRef: React.RefObject<{ x: number; y: number }>;
+  wingSlidersRef: React.RefObject<{ left: number; right: number }>;
   livePositionsRef: React.RefObject<LiveFlyPositions>;
 }
 
@@ -24,6 +26,7 @@ export default function SidePanel({
   collapsed,
   onToggleCollapsed,
   joystickRef,
+  wingSlidersRef,
   livePositionsRef,
 }: SidePanelProps) {
   return (
@@ -60,7 +63,34 @@ export default function SidePanel({
         {collapsed ? "‹" : "›"}
       </button>
 
-      {!collapsed && <Joystick vectorRef={joystickRef} disabled={!selectedFlyId} />}
+      {!collapsed && (
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 16,
+            padding: "16px 0",
+            borderBottom: "1px solid #2a2d3a",
+          }}
+        >
+          <WingSlider
+            label="L wing"
+            disabled={!selectedFlyId}
+            onChange={(v) => {
+              wingSlidersRef.current.left = v;
+            }}
+          />
+          <Joystick vectorRef={joystickRef} disabled={!selectedFlyId} />
+          <WingSlider
+            label="R wing"
+            disabled={!selectedFlyId}
+            onChange={(v) => {
+              wingSlidersRef.current.right = v;
+            }}
+          />
+        </div>
+      )}
 
       {!collapsed && (
         <div style={{ flex: 1, minHeight: 0, overflowY: "auto", padding: "8px 0" }} role="list">

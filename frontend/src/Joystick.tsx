@@ -58,8 +58,6 @@ export default function Joystick({ vectorRef, disabled }: JoystickProps) {
         flexDirection: "column",
         alignItems: "center",
         gap: 6,
-        padding: "16px 0",
-        borderBottom: "1px solid #2a2d3a",
         opacity: disabled ? 0.4 : 1,
       }}
     >
