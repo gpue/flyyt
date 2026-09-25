@@ -87,6 +87,8 @@ export interface BrainState {
   /** 0-1 per neuron, set to 1 on spike, decays each step — drives the point-cloud visualization. */
   brightness: Float32Array;
   weights: Float32Array; // NEURON_COUNT x NEURON_COUNT, row = source, col = target
+  /** Reused every stepBrain() call, not reallocated -- every fly's brain now steps every frame (FlyInstances.tsx), not just the selected one. */
+  recurrentInputScratch: Float32Array;
 }
 
 function randomWeights(): Float32Array {
@@ -108,21 +110,22 @@ export function createBrain(): BrainState {
     spiked: new Uint8Array(NEURON_COUNT),
     brightness: new Float32Array(NEURON_COUNT),
     weights: randomWeights(),
+    recurrentInputScratch: new Float32Array(NEURON_COUNT),
   };
 }
 
 /**
- * @param sensoryDrive 0-1, extra input current for the sensory group — the
- * one real sensor-like signal currently available in the app is the
- * joystick/movement command, not an actual vision pipeline (that's future
- * work per context.md).
+ * @param sensoryDrive 0-1, extra input current for the sensory group — fed
+ * from the max of joystick magnitude and loomingPerception.ts's per-wing
+ * drive (FlyInstances.tsx), so an approaching fly visibly lights up this
+ * population same as manual driving does, not just a placeholder anymore.
  */
 export function stepBrain(state: BrainState, sensoryDrive: number, dt: number): void {
-  const { potentials, spiked, brightness, weights } = state;
+  const { potentials, spiked, brightness, weights, recurrentInputScratch: recurrentInput } = state;
   const decay = dt / TAU_S;
   const brightnessDecay = Math.exp(-dt / BRIGHTNESS_DECAY_TAU_S);
 
-  const recurrentInput = new Float32Array(NEURON_COUNT);
+  recurrentInput.fill(0);
   for (let i = 0; i < NEURON_COUNT; i++) {
     if (!spiked[i]) continue;
     for (let j = 0; j < NEURON_COUNT; j++) {

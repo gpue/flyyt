@@ -41,7 +41,9 @@ export interface WingFlapOutput {
 }
 
 const LOW_PASS_TAU_S = 0.15; // smooths raw per-frame brightness spikes into a continuous drive
-const DRIVE_THRESHOLD = 0.05; // below this, frequency snaps to exactly 0 -- genuinely still, not just faint
+// Below this, frequency snaps to exactly 0 -- genuinely still, not just faint. Exported so
+// flyBuzz.ts can treat "silent" identically for the audible buzz and the visible wing.
+export const DRIVE_THRESHOLD = 0.05;
 const MAX_HZ = 8; // frequency at full smoothed drive; visible on-screen, NOT the real ~200Hz wingbeat
 const MAX_AMPLITUDE_RAD = 1.4; // matches FlyInstances' MAX_WING_LIFT_RAD, already live-verified
 

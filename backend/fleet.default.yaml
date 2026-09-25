@@ -1,0 +1,9 @@
+# Default fleet layout. flyyt's flies are all identical (unlike
+# vda5050-sim's named real-robot archetypes), so this is a generated layout
+# (count + area + seed), not a per-robot roster -- see fleet.py's
+# build_fly_configs(). Matches frontend/src/env.ts's own defaults
+# (VITE_FLY_COUNT=12, 120mm x 120mm area) so backend and frontend agree.
+count: 12
+area_width_mm: 120
+area_depth_mm: 120
+seed: 42

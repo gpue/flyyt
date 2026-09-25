@@ -4,6 +4,8 @@ import { Suspense, useRef } from "react";
 import CameraRig from "./CameraRig";
 import { FLY_AREA_CONFIG } from "./env";
 import FlyInstances from "./FlyInstances";
+import FlyLabels from "./FlyLabels";
+import MapView from "./MapView";
 import { FLY_EXTENT_MM, type FlyInstanceData } from "./useFlyLayout";
 import type { LiveFlyPositions } from "./useLiveFlyState";
 
@@ -27,6 +29,7 @@ const OVERVIEW = {
 interface FlySceneProps {
   flies: FlyInstanceData[];
   selectedFlyId: string | null;
+  onSelectFly: (id: string | null) => void;
   livePositionsRef: React.RefObject<LiveFlyPositions>;
   joystickRef: React.RefObject<{ x: number; y: number }>;
   wingSlidersRef: React.RefObject<{ left: number; right: number }>;
@@ -35,6 +38,7 @@ interface FlySceneProps {
 export default function FlyScene({
   flies,
   selectedFlyId,
+  onSelectFly,
   livePositionsRef,
   joystickRef,
   wingSlidersRef,
@@ -55,11 +59,15 @@ export default function FlyScene({
         <FlyInstances
           flies={flies}
           selectedFlyId={selectedFlyId}
+          onSelectFly={onSelectFly}
           joystickRef={joystickRef}
           wingSlidersRef={wingSlidersRef}
           livePositionsRef={livePositionsRef}
         />
+        <FlyLabels flies={flies} livePositionsRef={livePositionsRef} />
       </Suspense>
+
+      <MapView />
 
       <Grid
         position={[0, 0, 0]}
