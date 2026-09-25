@@ -13,17 +13,27 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
         with:
-          fetch-depth: 0
+          python-version: "3.12"
 
-      - name: Configure git identity
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
+      - name: Install hf CLI
+        run: pip install -U "huggingface_hub[cli]"
 
-      - name: Push frontend/ subtree to Hugging Face Space
+      # Content sync via the Hub API rather than `git subtree push`: the
+      # Space's git history includes commits made through the Hub API
+      # directly (not derived from this repo's git objects), so a plain
+      # (non-force) subtree push is permanently non-fast-forwardable.
+      # `hf upload` doesn't care about git ancestry, just current content.
+      # Note: this is additive/overwriting, not a mirror -- files removed
+      # from frontend/ won't be deleted from the Space (deliberately not
+      # using --delete here to avoid any risk of over-broad glob deletion).
+      - name: Upload frontend/ to Hugging Face Space
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
-          git remote add space "https://user:${HF_TOKEN}@huggingface.co/spaces/gpue/flyyt"
-          git subtree push --prefix frontend space main
+          hf upload gpue/flyyt frontend/ . \
+            --repo-type space \
+            --exclude "node_modules/*" "dist/*" \
+            --commit-message "Deploy ${{ github.sha }}"
