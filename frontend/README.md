@@ -1,3 +1,18 @@
+---
+title: flyyt
+emoji: 🪰
+colorFrom: purple
+colorTo: indigo
+sdk: docker
+app_port: 7860
+pinned: false
+---
+
+Practice-mode-only build: a fully client-side 3D fly-swarm playground (brain/
+vision/wing/gait/audio, no backend or NATS involved). For the VDA5050
+fleet-driving backend and full architecture, see the main repo:
+https://github.com/gpue/flyyt
+
 # flyyt frontend
 
 Standalone browser 3D viewer: one fly, centered, with orbit controls. First
