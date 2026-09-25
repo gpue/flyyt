@@ -1,15 +1,19 @@
 import { useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
 
-const BASE_SIZE = 96;
-const KNOB_SIZE = 36;
-const RADIUS = (BASE_SIZE - KNOB_SIZE) / 2;
+const SIZES = {
+  normal: { base: 96, knob: 36 },
+  large: { base: 140, knob: 52 },
+};
 
 interface JoystickProps {
   vectorRef: React.RefObject<{ x: number; y: number }>;
   disabled: boolean;
+  size?: "normal" | "large";
 }
 
-export default function Joystick({ vectorRef, disabled }: JoystickProps) {
+export default function Joystick({ vectorRef, disabled, size = "normal" }: JoystickProps) {
+  const { base: BASE_SIZE, knob: KNOB_SIZE } = SIZES[size];
+  const RADIUS = (BASE_SIZE - KNOB_SIZE) / 2;
   const baseRef = useRef<HTMLDivElement | null>(null);
   const [knob, setKnob] = useState({ x: 0, y: 0 });
   const draggingRef = useRef(false);
