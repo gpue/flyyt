@@ -10,7 +10,7 @@
 
 import { Line } from "@react-three/drei";
 import { useEffect, useState } from "react";
-import { BACKEND_CONFIG } from "./env";
+import { apiPath } from "./env";
 import { FLY_EXTENT_MM } from "./useFlyLayout";
 
 const NODE_COLOR = "#8e56fc";
@@ -43,7 +43,7 @@ function toWorld(x: number, y: number, height: number): [number, number, number]
 
 async function fetchMap(): Promise<MapData | null> {
   try {
-    const res = await fetch(`${BACKEND_CONFIG.apiUrl}/map`, { signal: AbortSignal.timeout(1500) });
+    const res = await fetch(apiPath("map"), { signal: AbortSignal.timeout(1500) });
     if (!res.ok) return null;
     return await res.json();
   } catch {

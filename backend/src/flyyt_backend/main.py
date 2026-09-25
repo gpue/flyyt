@@ -12,7 +12,7 @@ from pathlib import Path
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, HTMLResponse
 from fastapi.staticfiles import StaticFiles
 
 from flyyt_backend.config import get_settings
@@ -122,9 +122,23 @@ _frontend_dist = (
 if _frontend_dist.is_dir():
     app.mount(f"{settings.base_path}/assets", StaticFiles(directory=_frontend_dist / "assets"), name="assets")
 
+    # The frontend build uses relative asset paths (vite.config.ts's
+    # base: "./") precisely so this works: a <base href> matching
+    # BASE_PATH makes every relative reference in the page -- script/link
+    # tags AND this app's own fetch() calls (see frontend/src/env.ts's
+    # apiPath()) -- resolve correctly regardless of what path prefix this
+    # is actually deployed under (e.g. /cell/flyyt/ on a Nova instance),
+    # without baking a specific prefix into the build itself. Injected once
+    # at startup, not per-request -- BASE_PATH is fixed for this process's
+    # lifetime.
+    _base_href = f"{settings.base_path}/" if settings.base_path else "/"
+    _index_html = (_frontend_dist / "index.html").read_text().replace(
+        "<head>", f'<head>\n    <base href="{_base_href}">', 1
+    )
+
     @app.get(f"{settings.base_path}/{{full_path:path}}")
     def spa(full_path: str):
         candidate = _frontend_dist / full_path
         if full_path and candidate.is_file():
             return FileResponse(candidate)
-        return FileResponse(_frontend_dist / "index.html")
+        return HTMLResponse(_index_html)

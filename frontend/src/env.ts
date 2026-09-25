@@ -25,3 +25,18 @@ export const BACKEND_CONFIG = {
   apiUrl: readEnvString("VITE_FLYYT_API_URL", ""),
   natsWsUrl: readEnvString("VITE_NATS_WS_URL", "ws://localhost:8080"),
 };
+
+/**
+ * Builds a same-origin API URL. Deliberately NOT `/${path}` when apiUrl is
+ * unset -- this app can be served behind an arbitrary path prefix (e.g.
+ * /cell/flyyt/ on a Nova instance), and a root-absolute fetch path ignores
+ * that prefix entirely (hits http://host/roster instead of
+ * http://host/cell/flyyt/roster). A plain relative path resolves against
+ * the page's <base href> instead (injected server-side to match BASE_PATH
+ * -- see main.py's index.html serving), which is prefix-correct wherever
+ * this is deployed, including plain root-path local dev (no <base>, so it
+ * just resolves against "/").
+ */
+export function apiPath(path: string): string {
+  return BACKEND_CONFIG.apiUrl ? `${BACKEND_CONFIG.apiUrl}/${path}` : path;
+}

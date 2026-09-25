@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { BACKEND_CONFIG } from "./env";
+import { apiPath } from "./env";
 import FlyScene from "./FlyScene";
 import { resumeAudioContext } from "./flyBuzz";
 import SidePanel from "./SidePanel";
@@ -15,7 +15,7 @@ import { useVda5050Nats } from "./vda5050/useVda5050Nats";
  * select, and hands it back on deselect (a no-op, harmlessly ignored, when
  * there's no backend to reach). */
 function setManualMode(flyId: string, manual: boolean): void {
-  fetch(`${BACKEND_CONFIG.apiUrl}/fly/${flyId}/manual?manual=${manual}`, { method: "POST" }).catch(() => {});
+  fetch(apiPath(`fly/${flyId}/manual?manual=${manual}`), { method: "POST" }).catch(() => {});
 }
 
 export default function App() {

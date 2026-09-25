@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { BACKEND_CONFIG, FLY_AREA_CONFIG } from "./env";
+import { apiPath, FLY_AREA_CONFIG } from "./env";
 import { EXTENT_MM, GROUND_OFFSET_MM } from "./rigMetadata";
 
 export interface FlyInstanceData {
@@ -43,7 +43,7 @@ interface RosterEntry {
  */
 async function fetchRoster(groundOffsetMm: number): Promise<FlyInstanceData[] | null> {
   try {
-    const res = await fetch(`${BACKEND_CONFIG.apiUrl}/roster`, { signal: AbortSignal.timeout(1500) });
+    const res = await fetch(apiPath("roster"), { signal: AbortSignal.timeout(1500) });
     if (!res.ok) return null;
     const roster: RosterEntry[] = await res.json();
     if (roster.length === 0) return null;
