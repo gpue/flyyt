@@ -17,6 +17,10 @@ interface SidePanelProps {
   joystickRef: React.RefObject<{ x: number; y: number }>;
   wingSlidersRef: React.RefObject<{ left: number; right: number }>;
   livePositionsRef: React.RefObject<LiveFlyPositions>;
+  flying: boolean;
+  onToggleFlying: () => void;
+  altitudeLevelIndex: number;
+  onAltitudeChange: (index: number) => void;
 }
 
 export default function SidePanel({
@@ -28,6 +32,10 @@ export default function SidePanel({
   joystickRef,
   wingSlidersRef,
   livePositionsRef,
+  flying,
+  onToggleFlying,
+  altitudeLevelIndex,
+  onAltitudeChange,
 }: SidePanelProps) {
   const statusSnapshot = useStatusSnapshot(flies, livePositionsRef);
 
@@ -65,7 +73,17 @@ export default function SidePanel({
         {collapsed ? "‹" : "›"}
       </button>
 
-      {!collapsed && <FlyControls disabled={!selectedFlyId} joystickRef={joystickRef} wingSlidersRef={wingSlidersRef} />}
+      {!collapsed && (
+        <FlyControls
+          disabled={!selectedFlyId}
+          joystickRef={joystickRef}
+          wingSlidersRef={wingSlidersRef}
+          flying={flying}
+          onToggleFlying={onToggleFlying}
+          altitudeLevelIndex={altitudeLevelIndex}
+          onAltitudeChange={onAltitudeChange}
+        />
+      )}
 
       {!collapsed && (
         <button

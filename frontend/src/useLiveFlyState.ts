@@ -1,7 +1,7 @@
 import { useRef } from "react";
 import { createBrain, type BrainState } from "./flyBrain";
 import { createGaitState, type GaitState } from "./tripodGait";
-import type { FlyInstanceData } from "./useFlyLayout";
+import { FLY_GROUND_OFFSET_MM, type FlyInstanceData } from "./useFlyLayout";
 import { createWingControllerState, type WingControllerState } from "./wingController";
 
 export interface VisionState {
@@ -33,6 +33,12 @@ export interface LiveFlyState {
   batteryPercent: number;
   orderId: string;
   driving: boolean;
+  /** Flight mode -- true while this fly is commanded airborne (App.tsx's
+   * flying/altitude UI state syncs onto whichever fly is selected). */
+  flying: boolean;
+  /** What live.y eases toward each frame (FlyInstances.tsx) -- ground
+   * offset while grounded/landing, one of altitudeLevels.ts's levels while flying. */
+  targetAltitudeMm: number;
 }
 
 export type LiveFlyPositions = Map<string, LiveFlyState>;
@@ -56,6 +62,8 @@ export function useLiveFlyState(flies: FlyInstanceData[]) {
           batteryPercent: 100,
           orderId: "",
           driving: false,
+          flying: false,
+          targetAltitudeMm: FLY_GROUND_OFFSET_MM,
         },
       ]),
     ),

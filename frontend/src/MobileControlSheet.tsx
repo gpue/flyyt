@@ -18,6 +18,10 @@ interface MobileControlSheetProps {
   livePositionsRef: React.RefObject<LiveFlyPositions>;
   expanded: boolean;
   onToggleExpanded: () => void;
+  flying: boolean;
+  onToggleFlying: () => void;
+  altitudeLevelIndex: number;
+  onAltitudeChange: (index: number) => void;
 }
 
 export default function MobileControlSheet({
@@ -29,6 +33,10 @@ export default function MobileControlSheet({
   livePositionsRef,
   expanded,
   onToggleExpanded,
+  flying,
+  onToggleFlying,
+  altitudeLevelIndex,
+  onAltitudeChange,
 }: MobileControlSheetProps) {
   const statusSnapshot = useStatusSnapshot(flies, livePositionsRef);
 
@@ -70,7 +78,16 @@ export default function MobileControlSheet({
 
       {expanded && (
         <div style={{ flex: 1, minHeight: 0, overflow: "hidden", display: "flex", flexDirection: "column" }}>
-          <FlyControls disabled={!selectedFlyId} joystickRef={joystickRef} wingSlidersRef={wingSlidersRef} size="large" />
+          <FlyControls
+            disabled={!selectedFlyId}
+            joystickRef={joystickRef}
+            wingSlidersRef={wingSlidersRef}
+            flying={flying}
+            onToggleFlying={onToggleFlying}
+            altitudeLevelIndex={altitudeLevelIndex}
+            onAltitudeChange={onAltitudeChange}
+            size="large"
+          />
 
           <button
             type="button"

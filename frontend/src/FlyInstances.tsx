@@ -20,6 +20,27 @@ const MAX_TURN_RATE_RAD_S = 2.5;
 // range without distorting the mesh.
 const MAX_WING_LIFT_RAD = 1.4;
 
+// Flight mode: sustained near-max wing drive (not exactly 1.0 so the
+// DRIVE_THRESHOLD-adjacent silence right at touchdown still reads as a
+// distinct transition rather than a hard cliff) -- this alone drives both
+// the visual flap rate and the buzz pitch/gain up via wingController.ts's
+// and flyBuzz.ts's existing drive->frequency mapping, no changes needed
+// there. How fast live.y eases toward live.targetAltitudeMm, and how
+// quickly the little bank/pitch tilt below eases toward its target and
+// back to level -- same exponential-approach idiom wingController.ts
+// already uses for smoothedDrive.
+const FLIGHT_WING_DRIVE = 0.95;
+const ALTITUDE_TAU_S = 0.4;
+const MAX_PITCH_RAD = 0.18; // ~10 deg -- "a little", not aerobatic
+const MAX_ROLL_RAD = 0.22; // ~13 deg
+const TILT_TAU_S = 0.25;
+// A hovering fly's altitude isn't perfectly still -- a gentle sinusoidal
+// bob, render-only (never fed back into live.y/targetAltitudeMm), phase
+// offset per fly (by index) so a group of flying flies doesn't bob in
+// lockstep.
+const BOB_AMPLITUDE_MM = 0.4;
+const BOB_HZ = 1.6;
+
 const HALF_WIDTH = FLY_AREA_CONFIG.widthMm / 2;
 const HALF_DEPTH = FLY_AREA_CONFIG.depthMm / 2;
 
@@ -104,6 +125,10 @@ export default function FlyInstances({
   const tmpQuat = useRef(new Quaternion());
   const jointQuat = useRef(new Quaternion());
   const cameraForward = useRef(new Vector3());
+  // Transient render-only pitch/roll bank while flying -- not part of
+  // LiveFlyState since nothing outside this loop ever needs to read it
+  // (unlike x/y/z/heading, which CameraRig.tsx and FlyLabels.tsx also consume).
+  const tiltRef = useRef(new Map<string, { pitch: number; roll: number }>());
 
   const getRig = (flyId: string, group: Group): Map<string, RigNode> => {
     let rig = rigCache.current.get(flyId);
@@ -149,8 +174,9 @@ export default function FlyInstances({
     };
   }, []);
 
-  useFrame((_, dt) => {
+  useFrame((state, dt) => {
     const livePositions = livePositionsRef.current;
+    const elapsedTime = state.clock.elapsedTime;
     camera.getWorldDirection(cameraForward.current);
 
     // Every fly's brain/vision/wings update every frame now (not just the
@@ -202,7 +228,16 @@ export default function FlyInstances({
       // position/heading authority away from the local joystick entirely --
       // orders are waypoint-based, not a teleop signal, so the two can't
       // both drive movement at once.
-      const isWalking = isSelected && live.operatingMode !== "AUTOMATIC" && (command.forwardSpeed !== 0 || command.turnRate !== 0);
+      //
+      // isWalking (legs) and isTranslating (x/z/heading) split apart for
+      // flight mode: a flying fly still translates from the same joystick
+      // command, it just never plays a walking tripod gait while airborne --
+      // its legs simply freeze at their last pose, same as any other
+      // stopped-walking fly today.
+      const hasManualCommand =
+        isSelected && live.operatingMode !== "AUTOMATIC" && (command.forwardSpeed !== 0 || command.turnRate !== 0);
+      const isWalking = hasManualCommand && !live.flying;
+      const isTranslating = hasManualCommand;
       if (isWalking) stepGait(live.gait, command, dt);
 
       const wings = isSelected ? wingSlidersRef.current : ZERO_WINGS;
@@ -216,10 +251,17 @@ export default function FlyInstances({
       // (manual posing, only meaningful for the fly you're driving); the
       // brain's motor output plus the looming drive add a flapping
       // oscillation on top via wingController.ts.
+      // Flying fully replaces (not blends with) the brain/looming drive: that
+      // signal means "resting fly reacting to a nearby threat," which
+      // doesn't compose with a sustained flight stroke -- and it would just
+      // clip at the clamp(...,0,1) ceiling anyway, since FLIGHT_WING_DRIVE
+      // already leaves almost no headroom.
+      const baseDriveLeft = clamp(motorOutput(live.brain, "left") + loom.left, 0, 1);
+      const baseDriveRight = clamp(motorOutput(live.brain, "right") + loom.right, 0, 1);
       const flap = stepWingController(
         live.wingController,
-        clamp(motorOutput(live.brain, "left") + loom.left, 0, 1),
-        clamp(motorOutput(live.brain, "right") + loom.right, 0, 1),
+        live.flying ? FLIGHT_WING_DRIVE : baseDriveLeft,
+        live.flying ? FLIGHT_WING_DRIVE : baseDriveRight,
         dt,
       );
       live.gait.jointAngles[wingJointName("l", "roll")] = -wings.left * MAX_WING_LIFT_RAD + flap.left;
@@ -268,11 +310,36 @@ export default function FlyInstances({
         rigNode.object.quaternion.copy(composed);
       }
 
-      if (isWalking) {
+      if (isTranslating) {
         live.heading += command.turnRate * dt;
         live.x = clamp(live.x + Math.sin(live.heading) * command.forwardSpeed * dt, -HALF_WIDTH, HALF_WIDTH);
         live.z = clamp(live.z + Math.cos(live.heading) * command.forwardSpeed * dt, -HALF_DEPTH, HALF_DEPTH);
       }
+
+      // Always ease live.y toward its current target -- climbing while
+      // flying, or descending back to ground the instant flying flips false
+      // (App.tsx resets targetAltitudeMm to FLY_GROUND_OFFSET_MM then), same
+      // exponential-approach idiom as wingController.ts's smoothedDrive.
+      live.y += (live.targetAltitudeMm - live.y) * (1 - Math.exp(-dt / ALTITUDE_TAU_S));
+
+      // A little bank/pitch while actively steering in flight -- purely
+      // transient/render-only (tiltRef), eases toward zero on its own the
+      // moment the stick centers or flying ends, via the same lerp.
+      let tilt = tiltRef.current.get(fly.id);
+      if (!tilt) {
+        tilt = { pitch: 0, roll: 0 };
+        tiltRef.current.set(fly.id, tilt);
+      }
+      const targetPitch = live.flying ? -joystick.y * MAX_PITCH_RAD : 0;
+      const targetRoll = live.flying ? -joystick.x * MAX_ROLL_RAD : 0;
+      const tiltAlpha = 1 - Math.exp(-dt / TILT_TAU_S);
+      tilt.pitch += (targetPitch - tilt.pitch) * tiltAlpha;
+      tilt.roll += (targetRoll - tilt.roll) * tiltAlpha;
+
+      // A gentle hover bob while flying -- render-only, never written back
+      // into live.y/targetAltitudeMm, so it can't drift the fly's actual
+      // tracked altitude or fight the climb/descent lerp above.
+      const bob = live.flying ? Math.sin(elapsedTime * BOB_HZ * Math.PI * 2 + fly.index) * BOB_AMPLITUDE_MM : 0;
 
       // Always sync the rendered transform from live.{x,y,z,heading} --
       // that's the single source of truth regardless of who last wrote it
@@ -282,11 +349,20 @@ export default function FlyInstances({
       // backend order can move an unselected/AUTOMATIC fly too, skipping
       // this sync would silently leave its mesh frozen at its spawn point
       // while its actual position kept changing underneath it.
-      group.position.set(live.x, live.y, live.z);
+      group.position.set(live.x, live.y + bob, live.z);
       // The rig's bind pose faces FACING_OFFSET_RAD in world terms (not +Z),
       // so subtract it to make rotation.y actually turn the mesh to face its
-      // direction of travel instead of appearing to strafe sideways.
-      group.rotation.y = live.heading - FACING_OFFSET_RAD;
+      // direction of travel instead of appearing to strafe sideways. "YXZ"
+      // order composes yaw first (outermost), then two more rotations in
+      // the yawed frame -- the standard vehicle-tilt order, keeps
+      // rotation.y reading as pure heading and avoids gimbal artifacts at
+      // these small tilt angles. tilt.roll/tilt.pitch go into the X/Z slots
+      // (not the other way around) because this rig's bind-pose local axes
+      // put its forward/back tilt on Z and its left/right bank on X, the
+      // opposite of the naive X=pitch/Z=roll guess -- flagged by an earlier
+      // build where forward/back steering visibly banked the fly and
+      // left/right steering visibly pitched it.
+      group.rotation.set(tilt.roll, live.heading - FACING_OFFSET_RAD, tilt.pitch, "YXZ");
     }
   });
 

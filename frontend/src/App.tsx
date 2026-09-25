@@ -1,11 +1,13 @@
 import { useEffect, useRef, useState } from "react";
+import { ALTITUDE_LEVELS_MM } from "./altitudeLevels";
 import { apiPath } from "./env";
 import FlyScene from "./FlyScene";
 import { resumeAudioContext } from "./flyBuzz";
 import MobileControlSheet, { MOBILE_SHEET_HANDLE_HEIGHT } from "./MobileControlSheet";
 import SidePanel from "./SidePanel";
-import { useFlyLayout } from "./useFlyLayout";
+import { FLY_GROUND_OFFSET_MM, useFlyLayout } from "./useFlyLayout";
 import { useIsMobile } from "./useIsMobile";
+import { useKeyboardControls } from "./useKeyboardControls";
 import { useLiveFlyState } from "./useLiveFlyState";
 import { useVda5050Nats } from "./vda5050/useVda5050Nats";
 
@@ -29,6 +31,8 @@ export default function App() {
   const [selectedFlyId, setSelectedFlyId] = useState<string | null>(null);
   const [panelCollapsed, setPanelCollapsed] = useState(false);
   const [sheetExpanded, setSheetExpanded] = useState(false);
+  const [flying, setFlying] = useState(false);
+  const [altitudeLevelIndex, setAltitudeLevelIndex] = useState(0);
   const isMobile = useIsMobile();
 
   useEffect(() => {
@@ -46,6 +50,45 @@ export default function App() {
   useEffect(() => {
     if (selectedFlyId) setSheetExpanded(true);
   }, [selectedFlyId]);
+
+  // Syncs the flight switch/altitude slider's UI state onto whichever fly is
+  // selected, same shape as setManualMode above (body applies, cleanup
+  // reverts) -- the cleanup is what auto-lands a flying fly the moment you
+  // deselect it or select a different one, rather than leaving it hovering
+  // unattended with no visible control surface.
+  useEffect(() => {
+    if (!selectedFlyId) return;
+    const live = livePositionsRef.current.get(selectedFlyId);
+    if (live) {
+      live.flying = flying;
+      live.targetAltitudeMm = flying ? ALTITUDE_LEVELS_MM[altitudeLevelIndex] : FLY_GROUND_OFFSET_MM;
+    }
+    return () => {
+      const prevLive = livePositionsRef.current.get(selectedFlyId);
+      if (prevLive) {
+        prevLive.flying = false;
+        prevLive.targetAltitudeMm = FLY_GROUND_OFFSET_MM;
+      }
+    };
+  }, [flying, altitudeLevelIndex, selectedFlyId, livePositionsRef]);
+
+  // Freshly selecting a different fly always shows it as grounded in the
+  // switch/slider, matching the auto-land-on-deselect behavior above.
+  useEffect(() => {
+    setFlying(false);
+    setAltitudeLevelIndex(0);
+  }, [selectedFlyId]);
+
+  const toggleFlying = () => setFlying((f) => !f);
+  const onAltitudeChange = (index: number) => {
+    setAltitudeLevelIndex(Math.min(ALTITUDE_LEVELS_MM.length - 1, Math.max(0, index)));
+    // Changing altitude implies airborne; landing is only ever via the
+    // switch/Space, not by stepping back down past level 0.
+    setFlying(true);
+  };
+  const onAltitudeStep = (direction: 1 | -1) => onAltitudeChange(altitudeLevelIndex + direction);
+
+  useKeyboardControls({ selectedFlyId, joystickRef, onToggleFlying: toggleFlying, onAltitudeStep });
 
   return (
     // Buzzing audio needs a user gesture to start (browser autoplay policy);
@@ -100,6 +143,10 @@ export default function App() {
             livePositionsRef={livePositionsRef}
             expanded={sheetExpanded}
             onToggleExpanded={() => setSheetExpanded((e) => !e)}
+            flying={flying}
+            onToggleFlying={toggleFlying}
+            altitudeLevelIndex={altitudeLevelIndex}
+            onAltitudeChange={onAltitudeChange}
           />
         </div>
       ) : (
@@ -112,6 +159,10 @@ export default function App() {
           joystickRef={joystickRef}
           wingSlidersRef={wingSlidersRef}
           livePositionsRef={livePositionsRef}
+          flying={flying}
+          onToggleFlying={toggleFlying}
+          altitudeLevelIndex={altitudeLevelIndex}
+          onAltitudeChange={onAltitudeChange}
         />
       )}
     </div>
