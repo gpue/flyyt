@@ -1,5 +1,7 @@
 # flyyt
 
+**[🤗 Try the practice-mode visualizer live on Hugging Face Spaces](https://huggingface.co/spaces/gpue/flyyt)** — frontend-only, no backend/NATS required.
+
 A fleet of fly-scale "robots" speaking [VDA5050](https://www.vda.de/en/news/publications/publication/vda-5050-de-en-fassung) — the AGV fleet-management wire protocol usually used for warehouse robots — rendered as an actual biomechanically-articulated 3D fruit fly swarm, each with its own small brain.
 
 It's two things in one repo:
