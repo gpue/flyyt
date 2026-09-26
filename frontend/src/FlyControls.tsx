@@ -36,29 +36,32 @@ export default function FlyControls({
       }}
     >
       <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 16 }}>
-        <WingSlider
-          label="L wing"
-          disabled={disabled}
-          size={size}
-          onChange={(v) => {
-            wingSlidersRef.current.left = v;
-          }}
-        />
+        {!flying && (
+          <WingSlider
+            label="L wing"
+            disabled={disabled}
+            size={size}
+            onChange={(v) => {
+              wingSlidersRef.current.left = v;
+            }}
+          />
+        )}
         <Joystick vectorRef={joystickRef} disabled={disabled} size={size} />
-        <WingSlider
-          label="R wing"
-          disabled={disabled}
-          size={size}
-          onChange={(v) => {
-            wingSlidersRef.current.right = v;
-          }}
-        />
+        {flying ? (
+          <AltitudeSlider levelIndex={altitudeLevelIndex} disabled={disabled} onChange={onAltitudeChange} size={size} />
+        ) : (
+          <WingSlider
+            label="R wing"
+            disabled={disabled}
+            size={size}
+            onChange={(v) => {
+              wingSlidersRef.current.right = v;
+            }}
+          />
+        )}
       </div>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 16 }}>
         <FlightSwitch flying={flying} disabled={disabled} onToggle={onToggleFlying} size={size} />
-        {flying && (
-          <AltitudeSlider levelIndex={altitudeLevelIndex} disabled={disabled} onChange={onAltitudeChange} size={size} />
-        )}
       </div>
     </div>
   );
